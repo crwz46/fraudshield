@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  api:
+    build: .
+    container_name: fraudshield-api
+    ports:
+      - "8000:8000"
+    environment:
+      - FRAUDSHIELD_ENV=production
+      - FRAUDSHIELD_MODEL_THRESHOLD=0.5
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.9.2
+    container_name: fraudshield-mlflow
+    ports:
+      - "5001:5000"
+    environment:
+      - MLFLOW_TRACKING_URI=sqlite:///mlflow.db
+    volumes:
+      - ./mlflow:/mlflow
+    command: mlflow server --host 0.0.0.0 --backend-store-uri sqlite:///mlflow/mlflow.db --default-artifact-root ./mlflow/artifacts
+    restart: unless-stopped
+
+  monitor:
+    image: prom/prometheus:v2.45.0
+    container_name: fraudshield-monitor
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: unless-stopped
+
+  dashboard:
+    image: grafana/grafana:10.2.0
+    container_name: fraudshield-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+
+volumes:
+  grafana-data:

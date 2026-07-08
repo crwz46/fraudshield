@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Notebooks
+notebooks/
+
+# Data
+data/synthetic/
+data/drift_history.json
+
+# Models (large binaries — regenerate via training)
+models/*.joblib
+models/metrics.json
+models/reference_stats.json
+models/promoted_model.txt
+
+# CatBoost
+catboost_info/
+
+# Environment
+.env
+venv/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# MLflow
+mlflow/
