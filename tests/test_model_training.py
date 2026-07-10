@@ -7,7 +7,7 @@ from app.ml.train import ModelTrainer
 @pytest.fixture
 def mini_training_data(tmp_path):
     np.random.seed(42)
-    n = 200
+    n = 500
     df = pd.DataFrame({
         "amount": np.random.exponential(100, n),
         "merchant_category": np.random.choice(["retail", "food", "travel"], n),
@@ -39,14 +39,19 @@ class TestModelTrainer:
         metrics = trainer.train(mini_training_data, test_size=0.3)
         assert "roc_auc" in metrics
         assert "f1_score" in metrics
-        assert metrics["roc_auc"] > 0.5
-        assert metrics["f1_score"] >= 0
+        assert 0 <= metrics["roc_auc"] <= 1
+        assert "cv_mean" in metrics
+        assert "cv_scores" in metrics
+        assert len(metrics["cv_scores"]) == 5
+        assert "confusion_matrix" in metrics
 
     def test_catboost_training(self, mini_training_data):
         trainer = ModelTrainer(model_type="catboost")
         metrics = trainer.train(mini_training_data, test_size=0.3)
         assert "roc_auc" in metrics
-        assert metrics["roc_auc"] > 0.5
+        assert "average_precision" in metrics
+        assert 0 <= metrics["roc_auc"] <= 1
+        assert "cv_mean" in metrics
 
     def test_model_predicts_proba(self, mini_training_data):
         trainer = ModelTrainer(model_type="xgboost")

@@ -14,9 +14,10 @@ class TestDataGenerator:
     def test_fraud_and_normal_count(self):
         csv_path = generate_transactions(num_normal=100, num_fraud=20)
         df = pd.read_csv(csv_path)
-        assert len(df) == 120
+        # 100 normal + 5 false_alarm (100//20) + 10 main fraud + 10 stealth = 125
+        assert len(df) == 125
         assert df["is_fraud"].sum() == 20
-        assert (df["is_fraud"] == 0).sum() == 100
+        assert (df["is_fraud"] == 0).sum() == 105
 
     def test_all_expected_columns(self):
         csv_path = generate_transactions(num_normal=10, num_fraud=2)

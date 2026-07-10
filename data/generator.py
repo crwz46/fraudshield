@@ -1,10 +1,11 @@
 """
 Synthetic fraud detection data generator.
-Produces realistic transaction data with fraud patterns.
+Now with noise injection + stealth fraud for realistic ROC-AUC (~0.85-0.95).
 """
 
 import csv
 import random
+import math
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -20,7 +21,6 @@ def generate_transactions(
     output.mkdir(parents=True, exist_ok=True)
 
     transactions = []
-
     base_time = datetime(2025, 1, 1, 0, 0, 0)
 
     # Normal transactions
@@ -28,24 +28,51 @@ def generate_transactions(
         t = _normal_transaction(base_time, i)
         transactions.append(t)
 
-    # Fraud transactions — injected patterns
+    # Fraudulent transactions — injected patterns
     patterns = [
-        _fast_small_staircase,
-        _large_geographic_hop,
-        _midnight_splash,
-        _card_testing,
-        _refund_cycle,
+        ("fast_small_staircase", _fast_small_staircase),
+        ("large_geographic_hop", _large_geographic_hop),
+        ("midnight_splash", _midnight_splash),
+        ("card_testing", _card_testing),
+        ("refund_cycle", _refund_cycle),
     ]
-    per_pattern = num_fraud // len(patterns)
-    for i, pattern_fn in enumerate(patterns):
+    main_fraud = num_fraud - max(num_fraud // 5, 10)  # 80% main patterns
+    stealth_count = num_fraud - main_fraud              # 20% stealth
+
+    per_pattern = main_fraud // len(patterns)
+    for name, pattern_fn in patterns:
         for j in range(per_pattern):
-            t = pattern_fn(base_time, i * 10000 + j)
+            idx = hash(name) % 100000 + j
+            t = pattern_fn(base_time, idx)
+            if name != "fast_small_staircase":
+                _add_noise(t)
             transactions.append(t)
 
-    # Shuffle
+    # Stealth fraud — looks exactly like normal transactions but is fraud
+    for j in range(stealth_count):
+        t = _normal_transaction(base_time, 900000 + j)
+        t["transaction_id"] = f"txn_stealth_{j:08d}"
+        t["is_fraud"] = 1
+        t["days_since_last_transaction"] = random.randint(0, 2)
+        t["failed_attempts_last_hour"] = random.randint(0, 1)
+        transactions.append(t)
+
+    # False alarm normals — look fraud-like but are legit
+    for j in range(num_normal // 20):
+        idx = random.randint(0, num_normal - 1)
+        t = _normal_transaction(base_time, 800000 + j)
+        t["transaction_id"] = f"txn_fa_{j:08d}"
+        t["is_fraud"] = 0
+        t["amount"] = round(random.uniform(300, 2000), 2)
+        t["velocity_last_hour"] = random.randint(4, 10)
+        t["hour_of_day"] = random.randint(0, 5)
+        t["ip_country_match"] = random.choice([True, False])
+        t["failed_attempts_last_hour"] = random.randint(0, 3)
+        t["days_since_last_transaction"] = 0
+        transactions.append(t)
+
     random.shuffle(transactions)
 
-    # Write CSV
     fieldnames = [
         "transaction_id", "timestamp", "amount", "merchant_category",
         "merchant_country", "card_present", "distance_from_home_km",
@@ -62,9 +89,29 @@ def generate_transactions(
         writer.writeheader()
         writer.writerows(transactions)
 
-    print(f"Generated {len(transactions)} transactions ({num_fraud} fraud)")
+    fraud_count = sum(1 for t in transactions if t["is_fraud"])
+    print(f"Generated {len(transactions)} transactions ({fraud_count} fraud, {stealth_count} stealth)")
     print(f"Saved to {csv_path}")
     return csv_path
+
+
+def _add_noise(t: dict, noise_level: float = 0.15):
+    """Add gaussian noise to numeric features to blur fraud boundaries."""
+    for key in ["amount", "distance_from_home_km", "avg_transaction_amount_7d"]:
+        if key in t:
+            noise = t[key] * random.gauss(0, noise_level)
+            t[key] = round(max(0.01, t[key] + noise), 2)
+
+    if random.random() < 0.2:
+        t["ip_country_match"] = not t["ip_country_match"]
+    if random.random() < 0.15:
+        t["card_present"] = not t["card_present"]
+    if random.random() < 0.15:
+        t["hour_of_day"] = random.randint(0, 23)
+    if random.random() < 0.1:
+        t["merchant_category"] = random.choice(["grocery", "restaurant", "retail", "entertainment", "transport"])
+    if random.random() < 0.1:
+        t["merchant_country"] = "US"
 
 
 def _normal_transaction(base, i):
