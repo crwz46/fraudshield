@@ -1,0 +1,51 @@
+>>> curl http://localhost:8765/health
+{
+  "status": "healthy",
+  "version": "1.0.0",
+  "model_loaded": true,
+  "model_type": "xgboost",
+  "predictions_served": 0,
+  "uptime": "2s"
+}
+
+>>> curl -X POST http://localhost:8765/predict/single -H 'Content-Type: application/json' -d '{...}'
+{
+  "transaction_id": "txn_demo_001",
+  "is_fraud": true,
+  "fraud_probability": 0.6034,
+  "risk_level": "high",
+  "model_version": "1.0.0",
+  "processing_time_ms": 34.49
+}
+
+>>> curl http://localhost:8765/predict/importance
+{
+  "features": [
+    {
+      "name": "days_since_last_transaction",
+      "importance": 0.4666
+    },
+    {
+      "name": "age_log",
+      "importance": 0.0742
+    },
+    {
+      "name": "failed_attempts_last_hour",
+      "importance": 0.0543
+    },
+    {
+      "name": "tenure_log",
+      "importance": 0.0393
+    },
+    {
+      "name": "amount_log",
+      "importance": 0.0382
+    },
+    {
+      "name": "hour_cos",
+      "importance": 0.0378
+    },
+    {
+      "name": "failed_success_ratio",
+   
+...

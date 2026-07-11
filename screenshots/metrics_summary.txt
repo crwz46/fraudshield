@@ -1,0 +1,23 @@
+
+============================================================
+  FRAUDSHIELD — MODEL EVALUATION SUMMARY
+============================================================
+
+  Model Type:       XGBOOST
+  ROC-AUC:          0.9862
+  Avg Precision:    0.8976
+  F1 (default th):  0.8861
+  F1 (tuned th):    0.9333
+  Best Threshold:   0.7622
+
+  Cross-Validation (5-fold):
+    Scores:  0.9939, 0.9932, 0.9923, 0.981, 0.9795
+    Mean:    0.988 +/- 0.0063
+
+  Confusion Matrix:
+    TP: 35   FP: 4
+    FN: 5   TN: 2096
+
+  Test Set: 2140 transactions (40 fraud)
+  Trained:  2026-07-11T01:58:02.895502+00:00
+============================================================
