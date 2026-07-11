@@ -2,6 +2,8 @@
 
 Production-grade ML pipeline for fraud detection — synthetic data generation through model training, serving, monitoring, and automated retraining.
 
+[![CI](https://github.com/crwz46/fraudshield/actions/workflows/ci.yml/badge.svg)](https://github.com/crwz46/fraudshield/actions/workflows/ci.yml)
+
 ## Model Performance
 
 | Model | ROC-AUC | Avg Precision | F1 (default) | F1 (tuned) | CV Mean ± Std |
@@ -9,14 +11,9 @@ Production-grade ML pipeline for fraud detection — synthetic data generation t
 | XGBoost | **0.9862** | 0.8976 | 0.8861 | **0.9333** | 0.9880 ± 0.0063 |
 | CatBoost | **0.9841** | 0.8895 | 0.8642 | **0.9067** | 0.9856 ± 0.0056 |
 
-<details>
-<summary>Click to see evaluation charts</summary>
-
 | Confusion Matrix | ROC Curve | Feature Importance |
 |:-:|:-:|:-:|
-| ![confusion matrix](screenshots/confusion_matrix.png) | ![roc curve](screenshots/roc_curve.png) | ![feature importance](screenshots/feature_importance.png) |
-
-</details>
+| ![Confusion Matrix](https://raw.githubusercontent.com/crwz46/fraudshield/master/screenshots/confusion_matrix.png) | ![ROC Curve](https://raw.githubusercontent.com/crwz46/fraudshield/master/screenshots/roc_curve.png) | ![Feature Importance](https://raw.githubusercontent.com/crwz46/fraudshield/master/screenshots/feature_importance.png) |
 
 ## Architecture
 
